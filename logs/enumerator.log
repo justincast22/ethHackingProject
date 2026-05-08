@@ -1,0 +1,5 @@
+2026-05-08 13:50:36,725 | INFO | Running command: nmap -sn 192.168.0.1
+2026-05-08 13:50:36,840 | INFO | Running command: nmap -sS -sV -sC -p- 192.168.0.1
+2026-05-08 13:50:36,846 | INFO | Report saved to: host_enumeration_report_20260508_1750_UTC.md
+2026-05-08 13:51:33,264 | INFO | Running command: nmap -sn 192.168.0.1
+2026-05-08 13:51:33,290 | INFO | Running command: nmap -sT -sV -sC -p- 192.168.0.1
