@@ -47,48 +47,48 @@ Python packages:
 
 ## Clone the repository
 
-git clone https://github.com/justincast22/ethHackingProject.git
-cd ethHackingProject
+#### git clone https://github.com/justincast22/ethHackingProject.git
+- cd ethHackingProject
 
 ## Create a Virtual Environment
     
-python3.12 -m venv venv
-source venv/bin/activate
+#### python3.12 -m venv venv
+- source venv/bin/activate
 
 ## Install Dependencies
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 ## Nmap Installation
-sudo apt install nmap
+- sudo apt install nmap
 
 ## Ollama Setup (Optional)
-ollama pull gemma4:e4b
-ollama serve
+- ollama pull gemma4:e4b
+- ollama serve
 
 
 ## Basic Syntax
-python main.py [targets] [options]
-python main.py --help
+- python main.py [targets] [options]
+- python main.py --help
 
 ## Usage Examples
 
 ### Scan a Single Host
-python main.py 192.168.1.10
+- python main.py 192.168.1.10
 
 ### Scan a Subnet
-python main.py 192.168.1.0/24
+- python main.py 192.168.1.0/24
 
 ### Scan Multiple Targets
-python main.py 192.168.1.10,192.168.1.15
+- python main.py 192.168.1.10,192.168.1.15
 
 ### Exclude Targets
-python main.py 192.168.1.0/24 --exclude 192.168.1.1
+- python main.py 192.168.1.0/24 --exclude 192.168.1.1
 
 ### Disable AI Analysis
-python main.py 192.168.1.10 --no-ai
+- python main.py 192.168.1.10 --no-ai
 
 ## Report Output
-Reports are generated in Markdown format.
-Default naming format:
-    host_enumeration_report_YYYYMMDD_HHMM_UTC.md
+- Reports are generated in Markdown format.
+- Default naming format:
+    - host_enumeration_report_YYYYMMDD_HHMM_UTC.md
 
