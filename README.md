@@ -47,7 +47,7 @@ Python packages:
 
 ## Clone the repository
 
-#### git clone https://github.com/justincast22/ethHackingProject.git
+- git clone https://github.com/justincast22/ethHackingProject.git
 - cd ethHackingProject
 
 ## Create a Virtual Environment
