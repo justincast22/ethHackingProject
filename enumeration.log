@@ -1,0 +1,10 @@
+2026-05-09 21:28:57,003 - INFO - Running command: nmap -sn 127.0.0.1
+2026-05-09 21:28:57,018 - INFO - Running command: nmap -sT -T4 --top-ports 1000 127.0.0.1
+2026-05-09 21:28:57,055 - INFO - Running command: nmap -sT -sV -sC -p- 127.0.0.1
+2026-05-09 21:32:32,448 - INFO - Running command: nmap -O 127.0.0.1
+2026-05-09 21:32:32,505 - INFO - Report saved to: host_enumeration_report_20260510_0128_UTC.md
+2026-05-09 21:33:09,368 - INFO - Running command: nmap -sn 127.0.0.1
+2026-05-09 21:33:09,377 - INFO - Running command: nmap -sT -T4 --top-ports 1000 127.0.0.1
+2026-05-09 21:33:09,413 - INFO - Running command: nmap -sT -sV -sC -p- 127.0.0.1
+2026-05-09 21:36:44,673 - INFO - Running command: nmap -O 127.0.0.1
+2026-05-09 21:36:44,730 - INFO - Report saved to: host_enumeration_report_20260510_0133_UTC.md
