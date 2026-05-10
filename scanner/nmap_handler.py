@@ -1,18 +1,18 @@
-import subprocess
 import logging
+import subprocess
 
 
 class NmapHandler:
-    """
-    Handles running Nmap commands and returning raw output.
-    """
+    """Runs Nmap commands and returns the results."""
 
     def __init__(self, timeout=300):
         self.timeout = timeout
 
     def run_command(self, command):
+        """Runs a command and returns stdout/stderr."""
+
         try:
-            logging.info(f"Running command: {' '.join(command)}")
+            logging.info("Running command: %s", " ".join(command))
 
             result = subprocess.run(
                 command,
@@ -45,28 +45,89 @@ class NmapHandler:
             }
 
     def tcp_quick_scan(self, target):
-        # TCP Connect Scan (does not require sudo)
-        command = ["nmap", "-sT", "-T4", "--top-ports", "1000", target]
+        """Runs a quick TCP scan."""
+
+        command = [
+            "nmap",
+            "-sT",
+            "-T4",
+            "--top-ports",
+            "1000",
+            target
+        ]
+
         return self.run_command(command)
 
     def tcp_full_scan(self, target):
-        # Full TCP Connect Scan with service/version detection
-        command = ["nmap", "-sT", "-sV", "-sC", "-p-", target]
+        """Runs a full TCP scan."""
+
+        command = [
+            "nmap",
+            "-sT",
+            "-sV",
+            "-sC",
+            "-p-",
+            target
+        ]
+
         return self.run_command(command)
 
     def os_detection_scan(self, target):
-        # OS detection may still require sudo/root on some systems
-        command = ["nmap", "-O", target]
+        """Runs OS detection."""
+
+        command = [
+            "nmap",
+            "-O",
+            target
+        ]
+
         return self.run_command(command)
 
     def windows_smb_scan(self, target):
+        """Runs SMB enumeration scripts."""
+
         command = [
             "nmap",
             "-sT",
             "-p",
             "139,445",
             "--script",
-            "smb-os-discovery,smb-enum-shares,smb-enum-users",
+            (
+                "smb-os-discovery,"
+                "smb-enum-shares,"
+                "smb-enum-users,"
+                "smb-security-mode"
+            ),
+            target
+        ]
+
+        return self.run_command(command)
+
+    def netbios_scan(self, target):
+        """Runs NetBIOS enumeration."""
+
+        command = [
+            "nmap",
+            "-sT",
+            "-p",
+            "137,138,139",
+            "--script",
+            "nbstat",
+            target
+        ]
+
+        return self.run_command(command)
+
+    def active_directory_scan(self, target):
+        """Checks for Active Directory related services."""
+
+        command = [
+            "nmap",
+            "-sT",
+            "-p",
+            "53,88,135,139,389,445,464,636,3268,3269",
+            "--script",
+            "ldap-rootdse,smb-os-discovery",
             target
         ]
 

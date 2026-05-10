@@ -1,60 +1,50 @@
-class CommandResult:
-    """
-    Stores one executed command, raw output, errors, and parsed data.
-    """
+from dataclasses import dataclass, field
 
-    def __init__(self, command, stdout="", stderr="", return_code=0, parsed_data=None):
-        self.command = command
-        self.stdout = stdout
-        self.stderr = stderr
-        self.return_code = return_code
-        self.parsed_data = parsed_data or {}
+
+@dataclass
+class CommandResult:
+    """Stores command output and parsed data."""
+
+    command: str
+    stdout: str
+    stderr: str
+    return_code: int
+    parsed_data: dict = field(default_factory=dict)
 
     def raw_command_output_markdown(self):
-        markdown = []
+        """Formats the command output for the report."""
 
-        markdown.append(f"Command: `{self.command}`")
-        markdown.append("```")
+        output = [
+            f"Command: `{self.command}`",
+            "```"
+        ]
 
         if self.stdout:
-            markdown.append(self.stdout.strip())
+            output.append(self.stdout.strip())
 
         if self.stderr:
-            markdown.append("\n[stderr]")
-            markdown.append(self.stderr.strip())
+            output.append("")
+            output.append("[stderr]")
+            output.append(self.stderr.strip())
 
-        if not self.stdout and not self.stderr:
-            markdown.append("[No output]")
+        output.append("```")
 
-        markdown.append("```")
-
-        return "\n".join(markdown)
+        return "\n".join(output)
 
 
+@dataclass
 class AIAnalysisResult:
-    """
-    Stores AI analysis metadata and response text.
-    """
+    """Stores AI analysis information."""
 
-    def __init__(self, model, analyzed_at_utc, text, skipped=False, reason=None):
-        self.model = model
-        self.analyzed_at_utc = analyzed_at_utc
-        self.text = text
-        self.skipped = skipped
-        self.reason = reason
+    model: str
+    analyzed_at: str
+    text: str
 
-    def to_markdown(self):
-        lines = []
+    def to_lines(self):
+        """Formats AI analysis for the report."""
 
-        lines.append("### AI Analysis")
-        lines.append(
-            f"> Model: {self.model} | Analyzed: {self.analyzed_at_utc}"
-        )
-        lines.append("")
-
-        if self.skipped:
-            lines.append(f"AI analysis was skipped: {self.reason}")
-        else:
-            lines.append(self.text.strip())
-
-        return "\n".join(lines)
+        return [
+            f"> Model: {self.model} | Analyzed: {self.analyzed_at}",
+            "",
+            self.text
+        ]

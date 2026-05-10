@@ -1,14 +1,13 @@
-import requests
 import sys
 from datetime import datetime, timezone
+
+import requests
 
 from models.results import AIAnalysisResult
 
 
 class OllamaAnalyzer:
-    """
-    Handles local Ollama communication, prompt creation, and AI analysis.
-    """
+    """Handles local Ollama analysis."""
 
     def __init__(
         self,
@@ -17,114 +16,45 @@ class OllamaAnalyzer:
         timeout=120
     ):
         self.model = model
-        self.base_url = base_url.rstrip("/")
+        self.base_url = base_url
         self.timeout = timeout
 
-    def analyzed_timestamp(self):
-        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-
-    def is_ollama_reachable(self):
-        try:
-            response = requests.get(
-                f"{self.base_url}/api/tags",
-                timeout=10
-            )
-
-            return response.status_code == 200
-
-        except requests.RequestException:
-            return False
-
-    def is_model_available(self):
-        try:
-            response = requests.get(
-                f"{self.base_url}/api/tags",
-                timeout=10
-            )
-
-            if response.status_code != 200:
-                return False
-
-            data = response.json()
-            models = data.get("models", [])
-
-            return any(model.get("name") == self.model for model in models)
-
-        except requests.RequestException:
-            return False
-
-    def build_prompt(self, host):
-        services_text = host.services_as_text()
-
-        prompt = f"""
-You are acting as a penetration tester reviewing structured network enumeration results.
-
-Analyze the host below and provide a concise security analysis.
-
-Verified Host Information:
-IP Address: {host.ip_address}
-Hostname: {host.hostname}
-Domain: {host.domain}
-Operating System: {host.os_type}
-
-Open Services:
-{services_text}
-
-Unverified or Probable Information:
-{self.format_unverified_info(host)}
-
-Your response must include:
-1. Apparent host role
-2. High-risk services or misconfigurations
-3. Suggested follow-up enumeration steps
-4. Relevant CVEs or vulnerability classes, if service version data is available
-
-Keep the analysis professional, concise, and based only on the provided information.
-""".strip()
-
-        return prompt
-
-    def format_unverified_info(self, host):
-        if not host.unverified_info:
-            return "None identified"
-
-        return "\n".join(f"- {item}" for item in host.unverified_info)
-
     def analyze_host(self, host, no_ai=False):
-        timestamp = self.analyzed_timestamp()
+        """Runs AI analysis for one host."""
+
+        analyzed_at = datetime.now(timezone.utc).strftime(
+            "%Y-%m-%d %H:%M UTC"
+        )
 
         if no_ai:
             return AIAnalysisResult(
-                model=self.model,
-                analyzed_at_utc=timestamp,
-                text="",
-                skipped=True,
-                reason="--no-ai flag was used"
+                model="N/A",
+                analyzed_at=analyzed_at,
+                text="AI analysis was skipped because --no-ai was used."
             )
 
-        if not self.is_ollama_reachable():
-            print("[!] Warning: Ollama is not reachable. Skipping AI analysis.", file=sys.stderr)
-
-            return AIAnalysisResult(
-                model=self.model,
-                analyzed_at_utc=timestamp,
-                text="",
-                skipped=True,
-                reason="Ollama was not reachable"
-            )
-
-        if not self.is_model_available():
+        if not self.is_ollama_running():
             print(
-                f"[!] Warning: Ollama model '{self.model}' is not available. Skipping AI analysis.",
+                "[!] Ollama is not running. Skipping AI analysis.",
                 file=sys.stderr
             )
 
             return AIAnalysisResult(
                 model=self.model,
-                analyzed_at_utc=timestamp,
-                text="",
-                skipped=True,
-                reason=f"Model '{self.model}' was not available"
+                analyzed_at=analyzed_at,
+                text="AI analysis was skipped because Ollama was unavailable."
+            )
+
+        if not self.model_exists():
+            print(
+                f"[!] Ollama model not found: {self.model}",
+                file=sys.stderr
+            )
+
+            return AIAnalysisResult(
+                model=self.model,
+                analyzed_at=analyzed_at,
+                text=f"AI analysis was skipped because {self.model} was not found."
             )
 
         prompt = self.build_prompt(host)
@@ -141,24 +71,91 @@ Keep the analysis professional, concise, and based only on the provided informat
             )
 
             response.raise_for_status()
-
             data = response.json()
-            analysis_text = data.get("response", "").strip()
 
             return AIAnalysisResult(
                 model=self.model,
-                analyzed_at_utc=timestamp,
-                text=analysis_text,
-                skipped=False
+                analyzed_at=analyzed_at,
+                text=data.get("response", "").strip()
             )
 
         except requests.RequestException as error:
-            print(f"[!] Warning: Ollama request failed: {error}", file=sys.stderr)
+            print(
+                f"[!] Ollama request failed: {error}",
+                file=sys.stderr
+            )
 
             return AIAnalysisResult(
                 model=self.model,
-                analyzed_at_utc=timestamp,
-                text="",
-                skipped=True,
-                reason=f"Ollama request failed: {error}"
+                analyzed_at=analyzed_at,
+                text="AI analysis was skipped because the Ollama request failed."
             )
+
+    def is_ollama_running(self):
+        """Checks if Ollama is reachable."""
+
+        try:
+            response = requests.get(
+                f"{self.base_url}/api/tags",
+                timeout=5
+            )
+
+            return response.status_code == 200
+
+        except requests.RequestException:
+            return False
+
+    def model_exists(self):
+        """Checks if the selected model is installed."""
+
+        try:
+            response = requests.get(
+                f"{self.base_url}/api/tags",
+                timeout=5
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            models = data.get("models", [])
+
+            for model in models:
+                if model.get("name") == self.model:
+                    return True
+
+            return False
+
+        except requests.RequestException:
+            return False
+
+    def build_prompt(self, host):
+        """Builds the prompt sent to Ollama."""
+
+        services = host.services_as_text()
+        windows_info = host.windows_info_as_text()
+
+        return f"""
+Act as a penetration tester reviewing enumeration results.
+
+Give a short security analysis for this host.
+
+Verified information:
+IP Address: {host.ip_address}
+Hostname: {host.hostname}
+Domain: {host.domain}
+Operating System: {host.os_type}
+
+Services:
+{services}
+
+Windows Information:
+{windows_info}
+
+Include:
+1. Likely role of the host
+2. High-risk services or possible misconfigurations
+3. Follow-up enumeration steps
+4. Possible CVEs or vulnerability classes if versions are shown
+
+Keep the answer concise.
+""".strip()
